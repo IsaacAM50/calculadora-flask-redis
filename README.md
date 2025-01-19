@@ -73,11 +73,13 @@ Configuración adicional
 
 Variables de entorno
 
-FLASK_PORT: Puerto en el que se ejecuta la aplicación Flask.
+APP_PORT: Puerto en el que se ejecuta la aplicación Flask.
 
-REDIS_HOST: Dirección del servidor Redis.
+NETWORK: Red en la que se ejecutan los dos programas
 
 REDIS_PORT: Puerto del servidor Redis.
+
+REDIS: Versión de REDIS
 
 Personalización del historial
 
