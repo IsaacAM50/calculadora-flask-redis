@@ -1,0 +1,30 @@
+version: '${REDIS}'
+services:
+  redis:
+    image: "redis:alpine"
+    container_name: "redis-final"
+    networks:
+      - $NETWORK
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+
+  flask:
+    build:
+      context: .
+    container_name: "flask_app_ef"
+    networks:
+      - gestor_tareas_net
+    ports:
+      - "5001:${APP_PORT}"
+    logging:
+     driver: json-file
+     options:
+       max-size: "10m"
+       max-file: "3"
+    depends_on:
+      - redis
+
+networks:
+  gestor_tareas_net:
+    driver: bridge
+
