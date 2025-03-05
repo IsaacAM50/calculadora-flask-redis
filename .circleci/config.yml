@@ -48,8 +48,7 @@ jobs:
             pytest tests/ \
               --junitxml=test-results/junit.xml \
               --cov=. \
-              --cov-report=xml:test-results/coverage.xml \
-              
+              --cov-report=html:test-results/coverage-html \
       
       # Guardar artefactos de tests
       - store_test_results:
