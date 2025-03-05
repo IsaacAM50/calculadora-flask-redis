@@ -6,6 +6,9 @@ from flask import Flask, request, render_template, jsonify
 # Configuración de la aplicación Flask
 app = Flask(__name__)
 
+
+
+
 # Configuración de Redis
 redis_host = os.getenv('REDIS_HOST', 'redis-final')
 redis_port = int(os.getenv('REDIS_PORT', 6379))
@@ -64,7 +67,7 @@ def calculator():
     # Recuperar el historial desde Redis
     history = cache.lrange('history', 0, -1)
     
-    return render_template('index.html', result=result, history=history)
+    return render_template('templates/index.html', result=result, history=history)
 
 @app.route('/health', methods=['GET'])
 def health_check():
