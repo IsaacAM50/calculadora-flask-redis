@@ -9,6 +9,7 @@ jobs:
     docker:
       - image: cimg/python:3.9
     steps:
+      - checkout
       - ggshield/scan:
           fail-on-issues: true
   build-and-test:
