@@ -44,9 +44,9 @@ def test_redis_connection(redis_client):
     try:
         redis_client.ping()
         assert True
+    
     except Exception as e:
         pytest.fail(f"No se pudo conectar a Redis: {e}")
-
 def test_operation_history(client, redis_client):
     """Prueba el historial de operaciones"""
     # Limpiar historial antes de la prueba
