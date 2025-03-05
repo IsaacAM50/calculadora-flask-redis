@@ -3,7 +3,15 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
+      # Imagen principal para el job
       - image: cimg/python:3.9
+      
+      # Servicio de Redis
+      - image: redis:alpine
+        name: redis-final
+        
+         
+
     steps:
       - checkout
       - setup_remote_docker
@@ -15,11 +23,24 @@ jobs:
             python -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            pip install pytest
+            pip install pytest redis
+      
+      # Esperar a que Redis esté listo
+      - run:
+          name: Esperar inicio de Redis
+          command: |
+            for i in `seq 1 30`; do
+              nc -z localhost 6379 && echo "Redis está listo" && break
+              echo "Esperando Redis..." 
+              sleep 1
+            done
       
       # Ejecutar pruebas
       - run:
           name: Ejecutar pruebas
+          environment:
+            REDIS_HOST: redis-final
+            REDIS_PORT: 6379
           command: |
             . venv/bin/activate
             pytest tests/
@@ -28,7 +49,7 @@ jobs:
       - run:
           name: Construir imagen Docker
           command: |
-            docker build -t $isaacam/calculadora_flask:$CIRCLE_SHA1 .
+            docker build -t $DOCKER_IMAGE:$CIRCLE_SHA1 .
       
       # Login a Docker Hub
       - run:
@@ -40,7 +61,7 @@ jobs:
       - run:
           name: Push imagen a Docker Hub
           command: |
-            docker push $$isaacam/calculadora_flask:$CIRCLE_SHA1
+            docker push $DOCKER_IMAGE:$CIRCLE_SHA1
 
 workflows:
   version: 2
@@ -50,4 +71,3 @@ workflows:
           filters:
             branches:
               only: main
-
