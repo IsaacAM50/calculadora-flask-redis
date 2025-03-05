@@ -67,7 +67,7 @@ def calculator():
     # Recuperar el historial desde Redis
     history = cache.lrange('history', 0, -1)
     
-    return render_template('templates/index.html', result=result, history=history)
+    return render_template('index.html', result=result, history=history)
 
 @app.route('/health', methods=['GET'])
 def health_check():
