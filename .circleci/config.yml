@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  snyk: snyk/snyk@2.2.0
+
 jobs:
   build-and-test:
     docker:
@@ -9,14 +12,11 @@ jobs:
       # Servicio de Redis
       - image: redis:alpine
         name: redis-final  
-         
-
+        
     steps:
       - checkout
       - setup_remote_docker
       
-          
-
       # Instalar dependencias
       - run:
           name: Instalar dependencias
@@ -24,11 +24,15 @@ jobs:
             python -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            pip install pytest redis
-            pip install pytest-cov
+            pip install pytest redis pytest-cov
             pip install --upgrade pytest pytest-cov
-            pip install black
-            pip install ggshield
+            pip install black ggshield
+
+      # Ejecutar análisis de seguridad con Snyk
+      - snyk/install
+      - snyk/scan:
+          fail-on-issues: true  # Hace fallar el pipeline si encuentra vulnerabilidades
+      
       - run:
           name: Formatear código
           command: |
@@ -40,7 +44,7 @@ jobs:
       - run:
           name: Esperar inicio de Redis
           command: |
-            for i in seq 10; do
+            for i in $(seq 10); do
               nc -z localhost 6379 && echo "Redis está listo" && break
               echo "Esperando Redis..." 
               sleep 1
@@ -57,7 +61,7 @@ jobs:
             pytest tests/ \
               --junitxml=test-results/junit.xml \
               --cov=. \
-              --cov-report=html:test-results/coverage-html \
+              --cov-report=html:test-results/coverage-html
       
       # Guardar artefactos de tests
       - store_test_results:
