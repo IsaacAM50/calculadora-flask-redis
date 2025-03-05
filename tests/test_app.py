@@ -7,7 +7,7 @@ def client():
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
-@pytest.fixture
+
 def redis_client():
     client = redis.Redis(host='localhost', port=6379, db=0)
     yield client
@@ -38,13 +38,13 @@ def test_calculator_division_by_zero(client):
     assert response.status_code == 200
     assert b'Error: Divisi\xc3\xb3n por cero' in response.data
 
-    def test_redis_connection(redis_client):
-        """Prueba de conexión a Redis"""
-        try:
-            redis_client.ping()
-            assert True
-        except Exception as e:
-            pytest.fail(f"No se pudo conectar a Redis: {e}")
+def test_redis_connection(redis_client):
+    """Prueba de conexión a Redis"""
+    try:
+        redis_client.ping()
+        assert True
+    except Exception as e:
+        pytest.fail(f"No se pudo conectar a Redis: {e}")
 
 def test_operation_history(client, redis_client):
     """Prueba el historial de operaciones"""
