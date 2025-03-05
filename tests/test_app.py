@@ -9,7 +9,7 @@ def client():
         yield client
 
 def redis_client():
-    client = redis.Redis(host='localhost', port=6379, db=0)
+    client = redis.Redis(host='redis-final', port=6379, db=0)
     yield client
     client.close()
 
