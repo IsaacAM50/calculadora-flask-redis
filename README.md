@@ -58,7 +58,7 @@ Mensaje descriptivo
 Detalles de la operación realizada (si aplica)
 
 Estructura del proyecto
-
+'''
 .
 ├── app.py                  # Código principal de la aplicación
 ├── templates
@@ -68,7 +68,7 @@ Estructura del proyecto
 ├── requirements.txt        # Dependencias de Python
 ├── .env                    # Variables de entorno
 └── README.md               # Documentación del proyecto
-
+'''
 Configuración adicional
 
 Variables de entorno
