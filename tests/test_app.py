@@ -33,12 +33,12 @@ def test_calculator_division_by_zero(client):
     assert b'Error: Divisi\xc3\xb3n por cero' in response.data
 
     def test_redis_connection(redis_client):
-    """Prueba de conexión a Redis"""
-    try:
-        redis_client.ping()
-        assert True
-    except Exception as e:
-        pytest.fail(f"No se pudo conectar a Redis: {e}")
+        """Prueba de conexión a Redis"""
+        try:
+            redis_client.ping()
+            assert True
+        except Exception as e:
+            pytest.fail(f"No se pudo conectar a Redis: {e}")
 
 def test_operation_history(client, redis_client):
     """Prueba el historial de operaciones"""
