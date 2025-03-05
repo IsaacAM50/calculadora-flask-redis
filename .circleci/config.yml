@@ -26,6 +26,13 @@ jobs:
             pip install pytest redis
             pip install pytest-cov
             pip install --upgrade pytest pytest-cov
+            pip install black
+      - run:
+          name: Formatear código
+          command: |
+            . venv/bin/activate
+            black .
+            black --check . 
       
       # Esperar a que Redis esté listo
       - run:
