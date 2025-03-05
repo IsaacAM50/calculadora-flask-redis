@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Push imagen a Docker Hub
           command: |
-            docker push $DOCKER_IMAGE:$CIRCLE_SHA1
+            docker push $DOCKERHUB_USER/calculadora_app:$CIRCLE_SHA1
 
 workflows:
   version: 2
