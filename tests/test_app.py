@@ -1,7 +1,14 @@
 import pytest
+import redis
 from app.app import app
 
 @pytest.fixture
+
+def redis_client():
+    client = redis.Redis(host='localhost', port=6379, db=0)
+    yield client
+    client.close()
+    
 def client():
     app.config['TESTING'] = True
     with app.test_client() as client:
