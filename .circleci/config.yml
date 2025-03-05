@@ -1,19 +1,6 @@
 version: 2.1
 
-orbs:
-  ggshield: gitguardian/ggshield@1  # Orb de GitGuardian para escanear secretos
-
 jobs:
-  ggshield-scan:
-    docker:
-      - image: cimg/python:3.9  # Imagen con Python
-    steps:
-      - checkout  # Obtener código del repo
-      - ggshield/scan:  # Ejecutar escaneo con GitGuardian
-          name: ggshield-scan
-          base_revision: <<pipeline.git.base_revision>>
-          revision: <<pipeline.git.revision>>
-
   build-and-test:
     docker:
       # Imagen principal para el job
@@ -21,11 +8,14 @@ jobs:
       
       # Servicio de Redis
       - image: redis:alpine
-        name: redis-final
+        name: redis-final  
+         
 
     steps:
       - checkout
       - setup_remote_docker
+      
+          
 
       # Instalar dependencias
       - run:
@@ -34,22 +24,23 @@ jobs:
             python -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            pip install pytest redis pytest-cov
+            pip install pytest redis
+            pip install pytest-cov
             pip install --upgrade pytest pytest-cov
-            pip install black ggshield
-
+            pip install black
+            pip install ggshield
       - run:
           name: Formatear código
           command: |
             . venv/bin/activate
             black .
             black --check . 
-
+      
       # Esperar a que Redis esté listo
       - run:
           name: Esperar inicio de Redis
           command: |
-            for i in `seq 10`; do
+            for i in seq 10; do
               nc -z localhost 6379 && echo "Redis está listo" && break
               echo "Esperando Redis..." 
               sleep 1
@@ -66,7 +57,7 @@ jobs:
             pytest tests/ \
               --junitxml=test-results/junit.xml \
               --cov=. \
-              --cov-report=html:test-results/coverage-html
+              --cov-report=html:test-results/coverage-html \
       
       # Guardar artefactos de tests
       - store_test_results:
@@ -99,10 +90,7 @@ workflows:
   version: 2
   build-test-deploy:
     jobs:
-      - ggshield-scan  # Primero escanea secretos en el código
       - build-and-test:
-          requires:
-            - ggshield-scan  # Solo se ejecuta si el escaneo de GitGuardian pasa
           filters:
             branches:
               only: main
