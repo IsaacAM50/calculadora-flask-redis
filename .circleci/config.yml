@@ -24,6 +24,8 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
             pip install pytest redis
+            pip install pytest-cov
+            pip install --upgrade pytest pytest-cov
       
       # Esperar a que Redis esté listo
       - run:
