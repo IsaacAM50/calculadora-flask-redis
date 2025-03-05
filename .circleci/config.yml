@@ -49,7 +49,7 @@ jobs:
       - run:
           name: Construir imagen Docker
           command: |
-            docker build -t calculadora_app:$CIRCLE_SHA1 .
+            docker build -t $DOCKERHUB_USER/calculadora_app:$CIRCLE_SHA1 .
       
       # Login a Docker Hub
       - run:
