@@ -2,17 +2,16 @@ import pytest
 import redis
 from app.app import app
 
-@pytest.fixture
-
-def redis_client():
-    client = redis.Redis(host='localhost', port=6379, db=0)
-    yield client
-    client.close()
-    
+@pytest.fixture    
 def client():
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
+@pytest.fixture
+def redis_client():
+    client = redis.Redis(host='localhost', port=6379, db=0)
+    yield client
+    client.close()
 
 def test_home_page(client):
     """Prueba la página de inicio"""
