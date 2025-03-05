@@ -62,4 +62,4 @@ def test_operation_history(client, redis_client):
     # Verificar que se guardó en el historial
     history = redis_client.lrange('history', 0, -1)
     assert len(history) > 0
-    assert '10.0 add 5.0 = 15.0' in history
+    assert '10.0 add 5.0 = 15.0' in [entry.decode('utf-8') for entry in history]
