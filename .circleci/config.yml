@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Esperar inicio de Redis
           command: |
-            for i in `seq 150`; do
+            for i in `seq 30`; do
               nc -z localhost 6379 && echo "Redis está listo" && break
               echo "Esperando Redis..." 
               sleep 1
