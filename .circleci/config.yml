@@ -23,7 +23,9 @@ jobs:
           name: Instalar GitGuardian (ggshield)
           command: |
             pip install gitguardian
-      - ggshield/scan
+      - ggshield/scan:
+          revision: $CIRCLE_SHA1
+          
 
       # Instalar dependencias
       - run:
