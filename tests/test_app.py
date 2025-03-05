@@ -8,6 +8,7 @@ def client():
     with app.test_client() as client:
         yield client
 
+@pytest.fixture
 def redis_client():
     client = redis.Redis(host='redis-final', port=6379, db=0)
     yield client
