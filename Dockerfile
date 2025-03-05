@@ -2,10 +2,10 @@
 FROM python:3.9-slim
     
 # Establece el directorio de trabajo dentro del contenedor
-WORKDIR /app
+WORKDIR /app/app
 
 # Copia los archivos de la aplicación al contenedor
-COPY . /app
+COPY . /app/app
 
 # Actualiza los paquetes e instala dependencias necesarias
 RUN apt-get update && apt-get install -y \
