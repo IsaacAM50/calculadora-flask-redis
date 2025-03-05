@@ -1,24 +1,53 @@
 version: 2.1
+
 jobs:
-  build:
-    working_directory: ~/app
+  build-and-test:
     docker:
-      - image: cimg/base:2022.09
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
+      - image: cimg/python:3.9
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
+      
+      # Instalar dependencias
       - run:
-          name: Build Docker image
+          name: Instalar dependencias
           command: |
-            TAG=0.1.$CIRCLE_BUILD_NUM
-            docker build -t $DOCKERHUB_USERNAME/circleci-new-docker-example:$TAG .
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install pytest
+      
+      # Ejecutar pruebas
       - run:
-          name: Push application Docker image
+          name: Ejecutar pruebas
           command: |
-            TAG=0.1.$CIRCLE_BUILD_NUM
-            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            docker push $DOCKERHUB_USERNAME/circleci-new-docker-example:$TAG
+            . venv/bin/activate
+            pytest tests/
+      
+      # Construcción de imagen Docker
+      - run:
+          name: Construir imagen Docker
+          command: |
+            docker build -t $isaacam/calculadora_flask:$CIRCLE_SHA1 .
+      
+      # Login a Docker Hub
+      - run:
+          name: Login a Docker Hub
+          command: |
+            echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
+      
+      # Push de imagen
+      - run:
+          name: Push imagen a Docker Hub
+          command: |
+            docker push $$isaacam/calculadora_flask:$CIRCLE_SHA1
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build-and-test:
+          filters:
+            branches:
+              only: main
+
