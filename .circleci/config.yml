@@ -43,7 +43,20 @@ jobs:
             REDIS_PORT: 6379
           command: |
             . venv/bin/activate
-            pytest tests/
+            pytest tests/ \
+              --junitxml=test-results/junit.xml \
+              --cov=. \
+              --cov-report=xml:test-results/coverage.xml \
+              --cov-report=html:test-results/coverage-html
+      
+      # Guardar artefactos de tests
+      - store_test_results:
+          path: test-results
+      
+      # Guardar artefactos adicionales
+      - store_artifacts:
+          path: test-results
+          destination: test-reports
       
       # Construcción de imagen Docker
       - run:
