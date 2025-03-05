@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  ggshield: gitguardian/ggshield@1.1.0
+
 jobs:
   build-and-test:
     docker:
@@ -16,6 +19,12 @@ jobs:
       - checkout
       - setup_remote_docker
       
+      - run:
+          name: Instalar GitGuardian (ggshield)
+          command: |
+            pip install gitguardian
+      - ggshield/scan
+
       # Instalar dependencias
       - run:
           name: Instalar dependencias
@@ -27,6 +36,7 @@ jobs:
             pip install pytest-cov
             pip install --upgrade pytest pytest-cov
             pip install black
+            pip install ggshield
       - run:
           name: Formatear código
           command: |
