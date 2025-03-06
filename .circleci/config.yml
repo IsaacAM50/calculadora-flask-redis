@@ -94,14 +94,7 @@ jobs:
       - image: cimg/python:3.9
     steps:
       - checkout
-      # Instalar kubectl
-      - run:
-          name: Instalar kubectl
-          command: |
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x ./kubectl
-            sudo mv ./kubectl /usr/local/bin/kubectl
-            kubectl version --client
+    
       # Instalar herramientas necesarias
       - run:
           name: Instalar herramientas adicionales
