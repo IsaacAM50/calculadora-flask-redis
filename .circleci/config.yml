@@ -1,5 +1,7 @@
 version: 2.1
 
+orbs:
+  kubernetes: circleci/kubernetes@1.3
 
 jobs:
   build-and-test:
@@ -11,14 +13,10 @@ jobs:
       - image: redis:alpine
         name: redis-final
         
-         
-
     steps:
       - checkout
       - setup_remote_docker
       
-          
-
       # Instalar dependencias
       - run:
           name: Instalar dependencias
@@ -70,7 +68,6 @@ jobs:
           path: test-results
           destination: test-reports
       
-      
   deploy:
     docker:
       - image: cimg/base:2024.02
@@ -94,15 +91,104 @@ jobs:
           name: Push imagen a Docker Hub
           command: |
             docker push $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1
+            
+  update-k8s-manifests:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - checkout
+      - run:
+          name: Instalar herramientas necesarias
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y git
+            pip install PyYAML
+            # Configurar SSH
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+      # Usar la clave SSH configurada
+      - add_ssh_keys:
+          fingerprints:
+            - "${GIT_SSH_FINGERPRINT}" # La clave que ya configuraste
+      - run:
+          name: Configurar Git
+          command: |
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+      - run:
+          name: Clonar repositorio de manifiestos K8s
+          command: |
+            # Clonar usando SSH
+            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git k8s-manifests
+      - run:
+          name: Actualizar imagen en manifiesto
+          command: |
+            cd k8s-manifests
+            
+            # Script Python para actualizar los manifiestos
+            python -c "
+import yaml
+import os
+
+# Ruta al archivo de manifiesto
+manifest_path = 'manifest/deployment.yaml'  # Ubicación correcta del archivo
+
+# Cargar el manifiesto
+with open(manifest_path, 'r') as f:
+    manifest = yaml.safe_load(f)
+
+# Actualizar la imagen
+for container in manifest['spec']['template']['spec']['containers']:
+    if container['name'] == 'flask-app':
+        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']
+        print(f'Actualizando imagen a: {container["image"]}')
+
+# Guardar el manifiesto actualizado
+with open(manifest_path, 'w') as f:
+    yaml.dump(manifest, f, default_flow_style=False)
+"
+
+# Ruta al archivo de manifiesto
+manifest_path = 'manifest/deployment.yaml'  # Ubicación correcta del archivo
+
+# Cargar el manifiesto
+with open(manifest_path, 'r') as f:
+    manifest = yaml.safe_load(f)
+
+# Actualizar la imagen
+for container in manifest['spec']['template']['spec']['containers']:
+    if container['name'] == 'flask-app':
+        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']
+        print(f'Actualizando imagen a: {container[\"image\"]}')
+
+# Guardar el manifiesto actualizado
+with open(manifest_path, 'w') as f:
+    yaml.dump(manifest, f, default_flow_style=False)
+"
+      - run:
+          name: Commit y push de los cambios
+          command: |
+            cd k8s-manifests
+            git add .
+            git commit -m "Actualizar imagen a $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1"
+            # Push usando SSH (que ya debe estar configurado)
+            git push origin main
 
 workflows:
   version: 2
-  build-and-test:
+  build-test-deploy:
     jobs:
       - build-and-test
       - deploy:
           requires:
             - build-and-test
+          filters:
+            branches:
+              only:
+                - main
+      - update-k8s-manifests:
+          requires:
+            - deploy
           filters:
             branches:
               only:
