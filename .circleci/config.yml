@@ -119,41 +119,39 @@ jobs:
           name: Clonar repositorio de manifiestos K8s
           command: |
             # Clonar usando SSH
-            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git k8s-manifests
+            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
       - run:
           name: Actualizar imagen en manifiesto
           command: |
-            cd k8s-manifests
+            cd manifests
             
-            # Crear un script Python y ejecutarlo
-            cat > update_manifest.py << 'EOF'
-import yaml
-import os
-
-# Ruta al archivo de manifiesto
-manifest_path = 'manifest/deployment.yaml'  # Ubicación correcta del archivo
-
-# Cargar el manifiesto
-with open(manifest_path, 'r') as f:
-    manifest = yaml.safe_load(f)
-
-# Actualizar la imagen
-for container in manifest['spec']['template']['spec']['containers']:
-    if container['name'] == 'flask-app':
-        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']
-        print(f'Actualizando imagen a: {container["image"]}')
-
-# Guardar el manifiesto actualizado
-with open(manifest_path, 'w') as f:
-    yaml.dump(manifest, f, default_flow_style=False)
-EOF
-
+            # Crear un script Python separado
+            echo "import yaml" > update_manifest.py
+            echo "import os" >> update_manifest.py
+            echo "" >> update_manifest.py
+            echo "# Ruta al archivo de manifiesto" >> update_manifest.py
+            echo "manifest_path = 'manifest/deployment.yaml'" >> update_manifest.py
+            echo "" >> update_manifest.py
+            echo "# Cargar el manifiesto" >> update_manifest.py
+            echo "with open(manifest_path, 'r') as f:" >> update_manifest.py
+            echo "    manifest = yaml.safe_load(f)" >> update_manifest.py
+            echo "" >> update_manifest.py
+            echo "# Actualizar la imagen" >> update_manifest.py
+            echo "for container in manifest['spec']['template']['spec']['containers']:" >> update_manifest.py
+            echo "    if container['name'] == 'flask-app':" >> update_manifest.py
+            echo "        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']" >> update_manifest.py
+            echo "        print('Actualizando imagen a: ' + container['image'])" >> update_manifest.py
+            echo "" >> update_manifest.py
+            echo "# Guardar el manifiesto actualizado" >> update_manifest.py
+            echo "with open(manifest_path, 'w') as f:" >> update_manifest.py
+            echo "    yaml.dump(manifest, f, default_flow_style=False)" >> update_manifest.py
+            
             # Ejecutar el script
             python update_manifest.py
       - run:
           name: Commit y push de los cambios
           command: |
-            cd k8s-manifests
+            cd manifests
             git add .
             git commit -m "Actualizar imagen a $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1"
             # Push usando SSH (que ya debe estar configurado)
