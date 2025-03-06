@@ -81,7 +81,7 @@ jobs:
       - run:
           name: Construir imagen Docker
           command: |
-            docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .
+            docker build -t $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1 .
       
       # Login a Docker Hub
       - run:
@@ -93,7 +93,7 @@ jobs:
       - run:
           name: Push imagen a Docker Hub
           command: |
-            docker push $DOCKERHUB_USER/$IMAGE_NAME:$latest
+            docker push $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1
 
 workflows:
   version: 2
