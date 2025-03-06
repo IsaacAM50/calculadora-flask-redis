@@ -94,6 +94,11 @@ jobs:
       - image: cimg/kubectl:1.28
     steps:
       - checkout
+      - setup_remote_docker
+      - run:
+          name: Login a Docker Hub
+          command: |
+            echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
       # Instalar herramientas necesarias
       - run:
           name: Instalar herramientas adicionales
