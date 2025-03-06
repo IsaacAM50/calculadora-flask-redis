@@ -111,10 +111,10 @@ jobs:
             mkdir -p ~/.ssh
             ssh-keyscan github.com >> ~/.ssh/known_hosts
       
-      # Usar la clave SSH configurada
-      - add_ssh_keys:
-          fingerprints:
-            - "${GIT_SSH_FINGERPRINT}"
+      # No necesitamos las SSH keys ya que usaremos HTTPS con token
+      # - add_ssh_keys:
+      #     fingerprints:
+      #       - "${GIT_SSH_FINGERPRINT}"
             
       - run:
           name: Configurar Git
@@ -125,7 +125,8 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
+            # Usar HTTPS en lugar de SSH
+            git clone https://github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
             
       - run:
           name: Actualizar imagen con sed
@@ -153,7 +154,13 @@ jobs:
             cd manifests
             git add .
             git commit -m "Actualizar imagen a $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1"
-            git push origin main
+            
+            # Configurar credenciales para GitHub con HTTPS y token
+            git config credential.helper 'store --file=.git/credentials'
+            echo "https://${GITHUB_TOKEN}@github.com" > .git/credentials
+            
+            # Push usando HTTPS con token
+            git push https://${GITHUB_TOKEN}@github.com/IsaacAM50/calculadora-manifiestos-argo.git main
 
 workflows:
   version: 2
