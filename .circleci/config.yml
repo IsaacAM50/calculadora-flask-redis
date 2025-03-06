@@ -125,8 +125,8 @@ jobs:
           command: |
             cd k8s-manifests
             
-            # Script Python para actualizar los manifiestos
-            python -c "
+            # Crear un script Python y ejecutarlo
+            cat > update_manifest.py << 'EOF'
 import yaml
 import os
 
@@ -146,25 +146,10 @@ for container in manifest['spec']['template']['spec']['containers']:
 # Guardar el manifiesto actualizado
 with open(manifest_path, 'w') as f:
     yaml.dump(manifest, f, default_flow_style=False)
-"
+EOF
 
-# Ruta al archivo de manifiesto
-manifest_path = 'manifest/deployment.yaml'  # Ubicación correcta del archivo
-
-# Cargar el manifiesto
-with open(manifest_path, 'r') as f:
-    manifest = yaml.safe_load(f)
-
-# Actualizar la imagen
-for container in manifest['spec']['template']['spec']['containers']:
-    if container['name'] == 'flask-app':
-        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']
-        print(f'Actualizando imagen a: {container[\"image\"]}')
-
-# Guardar el manifiesto actualizado
-with open(manifest_path, 'w') as f:
-    yaml.dump(manifest, f, default_flow_style=False)
-"
+            # Ejecutar el script
+            python update_manifest.py
       - run:
           name: Commit y push de los cambios
           command: |
