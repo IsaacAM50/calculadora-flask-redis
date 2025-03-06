@@ -70,11 +70,18 @@ jobs:
           path: test-results
           destination: test-reports
       
+      
+  deploy:
+    docker:
+      - image: cimg/base:2024.02
+    steps:
+      - checkout
+      - setup_remote_docker
       # Construcción de imagen Docker
       - run:
           name: Construir imagen Docker
           command: |
-            docker build -t $DOCKERHUB_USER/calculadora_app:$CIRCLE_SHA1 .
+            docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .
       
       # Login a Docker Hub
       - run:
@@ -86,13 +93,17 @@ jobs:
       - run:
           name: Push imagen a Docker Hub
           command: |
-            docker push $DOCKERHUB_USER/calculadora_app:$CIRCLE_SHA1
+            docker push $DOCKERHUB_USER/$IMAGE_NAME:$latest
 
 workflows:
   version: 2
-  build-test-deploy:
+  build-and-test:
     jobs:
-      - build-and-test:
+      - build-and-test
+      - deploy:
+          requires:
+            - build-and-test
           filters:
             branches:
-              only: main
+              only:
+                - main
