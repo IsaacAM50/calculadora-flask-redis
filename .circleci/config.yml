@@ -132,19 +132,31 @@ jobs:
             echo "# Ruta al archivo de manifiesto" >> update_manifest.py
             echo "manifest_path = 'manifest/deployment.yaml'" >> update_manifest.py
             echo "" >> update_manifest.py
-            echo "# Cargar el manifiesto" >> update_manifest.py
+            echo "# Cargar todos los documentos YAML" >> update_manifest.py
             echo "with open(manifest_path, 'r') as f:" >> update_manifest.py
-            echo "    manifest = yaml.safe_load(f)" >> update_manifest.py
+            echo "    documents = list(yaml.safe_load_all(f))" >> update_manifest.py
             echo "" >> update_manifest.py
-            echo "# Actualizar la imagen" >> update_manifest.py
-            echo "for container in manifest['spec']['template']['spec']['containers']:" >> update_manifest.py
-            echo "    if container['name'] == 'flask-app':" >> update_manifest.py
-            echo "        container['image'] = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']" >> update_manifest.py
-            echo "        print('Actualizando imagen a: ' + container['image'])" >> update_manifest.py
+            echo "# Buscar y actualizar el Deployment correcto" >> update_manifest.py
+            echo "deployment_updated = False" >> update_manifest.py
+            echo "for i, doc in enumerate(documents):" >> update_manifest.py
+            echo "    # Verificar si es un Deployment" >> update_manifest.py
+            echo "    if doc and doc.get('kind') == 'Deployment' and doc.get('metadata', {}).get('name') == 'flaskapp':" >> update_manifest.py
+            echo "        # Buscar el contenedor correcto" >> update_manifest.py
+            echo "        for container in doc['spec']['template']['spec']['containers']:" >> update_manifest.py
+            echo "            if container['name'] == 'flask-app':" >> update_manifest.py
+            echo "                # Actualizar la imagen" >> update_manifest.py
+            echo "                new_image = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']" >> update_manifest.py
+            echo "                print(f'Encontrado Deployment. Actualizando imagen de {container[\"image\"]} a {new_image}')" >> update_manifest.py
+            echo "                container['image'] = new_image" >> update_manifest.py
+            echo "                deployment_updated = True" >> update_manifest.py
             echo "" >> update_manifest.py
-            echo "# Guardar el manifiesto actualizado" >> update_manifest.py
+            echo "if not deployment_updated:" >> update_manifest.py
+            echo "    print('ADVERTENCIA: No se encontró el Deployment o el contenedor flask-app para actualizar')" >> update_manifest.py
+            echo "    print('Verificar nombres en el archivo manifest/deployment.yaml')" >> update_manifest.py
+            echo "" >> update_manifest.py
+            echo "# Guardar todos los documentos de vuelta al archivo" >> update_manifest.py
             echo "with open(manifest_path, 'w') as f:" >> update_manifest.py
-            echo "    yaml.dump(manifest, f, default_flow_style=False)" >> update_manifest.py
+            echo "    yaml.dump_all(documents, f, default_flow_style=False)" >> update_manifest.py
             
             # Ejecutar el script
             python update_manifest.py
