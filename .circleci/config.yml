@@ -91,14 +91,17 @@ jobs:
             
   update-k8s-manifests:
     docker:
-      - image: cimg/kubectl:1.28
+      - image: cimg/python:3.9
     steps:
       - checkout
-      - setup_remote_docker
+      # Instalar kubectl
       - run:
-          name: Login a Docker Hub
+          name: Instalar kubectl
           command: |
-            echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+            kubectl version --client
       # Instalar herramientas necesarias
       - run:
           name: Instalar herramientas adicionales
