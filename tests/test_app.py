@@ -56,7 +56,7 @@ def test_operation_history(client, redis_client):
     # Limpiar historial antes de la prueba
     redis_client.delete("history")
 
-    # Realizar una operación
+    # Realizar una operaciónnnnn
     client.post(
         "/", data={"num1": 10, "num2": 5, "operation": "add"}, follow_redirects=True
     )
