@@ -133,7 +133,7 @@ jobs:
             cd manifests
             
             # Generar el YAML actualizado usando kubectl y sobrescribir el archivo
-            kubectl create --dry-run=client -f manifest/deployment.yaml -o yaml | \
+            kubectl create --dry-run=client -f manifest/deployment.yaml -o yaml --validate=false | \
             kubectl set image --local -f - \
               flask-app=$DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1 \
               --output yaml > manifest/deployment.yaml.new
@@ -171,4 +171,3 @@ workflows:
           filters:
             branches:
               only:
-                - main
