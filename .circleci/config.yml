@@ -128,22 +128,24 @@ jobs:
             git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
             
       - run:
-          name: Actualizar imagen con kubectl
+          name: Actualizar imagen con sed
           command: |
             cd manifests
             
-            # Generar el YAML actualizado usando kubectl y sobrescribir el archivo
-            kubectl create --dry-run=client -f manifest/deployment.yaml -o yaml --validate=false | \
-            kubectl set image --local -f - \
-              flask-app=$DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1 \
-              --output yaml > manifest/deployment.yaml.new
+            # Guardar la nueva imagen en una variable
+            NEW_IMAGE="$DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1"
+            echo "Nueva imagen: $NEW_IMAGE"
             
-            # Ver los cambios que se hicieron
-            echo "Cambios realizados:"
-            diff manifest/deployment.yaml manifest/deployment.yaml.new || true
+            # Mostrar la línea actual de la imagen
+            echo "Imagen actual:"
+            grep -n "image: isaacam/calculadora_app" manifest/deployment.yaml
             
-            # Reemplazar el archivo original con el nuevo
-            mv manifest/deployment.yaml.new manifest/deployment.yaml
+            # Reemplazar la imagen usando sed
+            sed -i "s|image: isaacam/calculadora_app:.*|image: $NEW_IMAGE|g" manifest/deployment.yaml
+            
+            # Verificar que el cambio se hizo correctamente
+            echo "Imagen actualizada:"
+            grep -n "image: $DOCKERHUB_USER/$IMAGE_NAME" manifest/deployment.yaml
             
       - run:
           name: Commit y push de los cambios
@@ -171,3 +173,4 @@ workflows:
           filters:
             branches:
               only:
+                - main
