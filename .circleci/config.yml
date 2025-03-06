@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  kubernetes: circleci/kubernetes@1.3
-
 jobs:
   build-and-test:
     docker:
@@ -94,79 +91,58 @@ jobs:
             
   update-k8s-manifests:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/kubectl:1.28
     steps:
       - checkout
+      # Instalar herramientas necesarias
       - run:
-          name: Instalar herramientas necesarias
+          name: Instalar herramientas adicionales
           command: |
             sudo apt-get update
             sudo apt-get install -y git
-            pip install PyYAML
-            # Configurar SSH
             mkdir -p ~/.ssh
             ssh-keyscan github.com >> ~/.ssh/known_hosts
+      
       # Usar la clave SSH configurada
       - add_ssh_keys:
           fingerprints:
-            - "${GIT_SSH_FINGERPRINT}" # La clave que ya configuraste
+            - "${GIT_SSH_FINGERPRINT}"
+            
       - run:
           name: Configurar Git
           command: |
             git config --global user.email "ci-bot@example.com"
             git config --global user.name "CircleCI Bot"
+            
       - run:
-          name: Clonar repositorio de manifiestos K8s
+          name: Clonar repositorio de manifiestos
           command: |
-            # Clonar usando SSH
             git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
+            
       - run:
-          name: Actualizar imagen en manifiesto
+          name: Actualizar imagen con kubectl
           command: |
             cd manifests
             
-            # Crear un script Python separado
-            echo "import yaml" > update_manifest.py
-            echo "import os" >> update_manifest.py
-            echo "" >> update_manifest.py
-            echo "# Ruta al archivo de manifiesto" >> update_manifest.py
-            echo "manifest_path = 'manifest/deployment.yaml'" >> update_manifest.py
-            echo "" >> update_manifest.py
-            echo "# Cargar todos los documentos YAML" >> update_manifest.py
-            echo "with open(manifest_path, 'r') as f:" >> update_manifest.py
-            echo "    documents = list(yaml.safe_load_all(f))" >> update_manifest.py
-            echo "" >> update_manifest.py
-            echo "# Buscar y actualizar el Deployment correcto" >> update_manifest.py
-            echo "deployment_updated = False" >> update_manifest.py
-            echo "for i, doc in enumerate(documents):" >> update_manifest.py
-            echo "    # Verificar si es un Deployment" >> update_manifest.py
-            echo "    if doc and doc.get('kind') == 'Deployment' and doc.get('metadata', {}).get('name') == 'flaskapp':" >> update_manifest.py
-            echo "        # Buscar el contenedor correcto" >> update_manifest.py
-            echo "        for container in doc['spec']['template']['spec']['containers']:" >> update_manifest.py
-            echo "            if container['name'] == 'flask-app':" >> update_manifest.py
-            echo "                # Actualizar la imagen" >> update_manifest.py
-            echo "                new_image = os.environ['DOCKERHUB_USER'] + '/' + os.environ['IMAGE_NAME'] + ':' + os.environ['CIRCLE_SHA1']" >> update_manifest.py
-            echo "                print(f'Encontrado Deployment. Actualizando imagen de {container[\"image\"]} a {new_image}')" >> update_manifest.py
-            echo "                container['image'] = new_image" >> update_manifest.py
-            echo "                deployment_updated = True" >> update_manifest.py
-            echo "" >> update_manifest.py
-            echo "if not deployment_updated:" >> update_manifest.py
-            echo "    print('ADVERTENCIA: No se encontró el Deployment o el contenedor flask-app para actualizar')" >> update_manifest.py
-            echo "    print('Verificar nombres en el archivo manifest/deployment.yaml')" >> update_manifest.py
-            echo "" >> update_manifest.py
-            echo "# Guardar todos los documentos de vuelta al archivo" >> update_manifest.py
-            echo "with open(manifest_path, 'w') as f:" >> update_manifest.py
-            echo "    yaml.dump_all(documents, f, default_flow_style=False)" >> update_manifest.py
+            # Generar el YAML actualizado usando kubectl y sobrescribir el archivo
+            kubectl create --dry-run=client -f manifest/deployment.yaml -o yaml | \
+            kubectl set image --local -f - \
+              flask-app=$DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1 \
+              --output yaml > manifest/deployment.yaml.new
             
-            # Ejecutar el script
-            python update_manifest.py
+            # Ver los cambios que se hicieron
+            echo "Cambios realizados:"
+            diff manifest/deployment.yaml manifest/deployment.yaml.new || true
+            
+            # Reemplazar el archivo original con el nuevo
+            mv manifest/deployment.yaml.new manifest/deployment.yaml
+            
       - run:
           name: Commit y push de los cambios
           command: |
             cd manifests
             git add .
             git commit -m "Actualizar imagen a $DOCKERHUB_USER/$IMAGE_NAME:$CIRCLE_SHA1"
-            # Push usando SSH (que ya debe estar configurado)
             git push origin main
 
 workflows:
