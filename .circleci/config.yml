@@ -104,11 +104,7 @@ jobs:
             mkdir -p ~/.ssh
             ssh-keyscan github.com >> ~/.ssh/known_hosts
       
-      # No necesitamos las SSH keys ya que usaremos HTTPS con token
-      # - add_ssh_keys:
-      #     fingerprints:
-      #       - "${GIT_SSH_FINGERPRINT}"
-            
+
       - run:
           name: Configurar Git
           command: |
